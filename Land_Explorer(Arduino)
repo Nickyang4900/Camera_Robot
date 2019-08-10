@@ -1,0 +1,190 @@
+#include <PS2X_lib.h> 
+
+PS2X ps2x; // create PS2 Controller Class
+
+//right now, the library does NOT support hot pluggable controllers, meaning
+//you must always either restart your Arduino after you conect the controller,
+//or call config_gamepad(pins) again after connecting the controller.
+
+int error = 0;
+byte type = 0;
+byte vibrate=0;
+
+   //**************New Definition*************
+int start=0;
+
+int Move1=2; //Move(Output),Move1 = Most Significant Bit
+int Move2=3;
+int Move3=4;
+
+int camera_state=1; //Camera switch
+int camera_pin=5;   
+int camera_up=6;    //Camera angle adjustment
+int camera_down=7;
+
+int light_state=0; //Light switch
+int light_pin=8; 
+
+
+void setup() {
+
+for(int i=2;i<=8;i++){
+    pinMode(i,OUTPUT);
+      }
+
+digitalWrite(camera_pin,camera_state);
+digitalWrite(light_pin,light_state);
+Serial.begin(57600);
+
+  //CHANGES for v1.6 HERE!!! **************PAY ATTENTION*************
+
+  error = ps2x.config_gamepad(13, 11, 10, 12, true, true); //setup pins and settings:  GamePad(clock, command, attention, data, Pressures, Rumble) check for error
+
+  if (error == 0) {
+    Serial.println("Found Controller, configured successful");
+    Serial.println("Try out all the buttons, X will vibrate the controller, faster as you press harder;");
+    Serial.println("holding L1 or R1 will print out the analog stick values.");
+    Serial.println("Go to [url]www.billporter.info[/url] for updates and to report bugs.");
+  }
+
+  else if (error == 1)
+    Serial.println("No controller found, check wiring, see readme.txt to enable debug. visit [url]www.billporter.info[/url] for troubleshooting tips");
+
+  else if (error == 2)
+    Serial.println("Controller found but not accepting commands. see readme.txt to enable debug. Visit [url]www.billporter.info[/url] for troubleshooting tips");
+
+  else if (error == 3)
+    Serial.println("Controller refusing to enter Pressures mode, may not support it. ");
+
+  //Serial.print(ps2x.Analog(1), HEX);
+
+  type = ps2x.readType();
+  switch (type) {
+    case 0:
+      Serial.println("Unknown Controller type");
+      break;
+    case 1:
+      Serial.println("DualShock Controller Found");
+      break;
+    case 2:
+      Serial.println("GuitarHero Controller Found");
+      break;
+  }
+
+}
+
+void loop() {
+  /* You must Read Gamepad to get new values
+    Read GamePad and set vibration values
+    ps2x.read_gamepad(small motor on/off, larger motor strenght from 0-255)
+    if you don't enable the rumble, use ps2x.read_gamepad(); with no values
+
+    you should call this at least once a second
+  */
+
+  if (error == 1) //skip loop if no controller found
+    return;
+
+    ps2x.read_gamepad(false, vibrate);          //read controller and set large motor to spin at 'vibrate' speed
+    digitalWrite(Move1,0);
+    digitalWrite(Move2,0);
+    digitalWrite(Move3,0);
+    
+    if (ps2x.Button(PSB_PAD_UP)) {        //   ******************Direction Key*********************
+          if (ps2x.Button(PSB_L2)){
+                Serial.println("↖Turning LEFT");
+                digitalWrite(Move1,1);
+                digitalWrite(Move2,1);
+                digitalWrite(Move3,0);}
+          else if (ps2x.Button(PSB_R2)){
+                      Serial.println("↗Turning RIGHT");
+                      digitalWrite(Move1,0);
+                      digitalWrite(Move2,1);
+                      digitalWrite(Move3,1);}                      
+                      else{
+                        Serial.println("↑ Moving Forward ");
+                        digitalWrite(Move1,1);
+                        digitalWrite(Move2,1);
+                        digitalWrite(Move3,1);}                          
+    }
+    if (ps2x.Button(PSB_PAD_RIGHT)) {
+      Serial.println("→ Moving RIGHT ");
+      digitalWrite(Move1,0);
+      digitalWrite(Move2,0);
+      digitalWrite(Move3,1);
+    }
+    if (ps2x.Button(PSB_PAD_LEFT)) {
+      Serial.println("← Moving LEFT ");
+      digitalWrite(Move1,1);
+      digitalWrite(Move2,0);
+      digitalWrite(Move3,0);
+    }
+    if (ps2x.Button(PSB_PAD_DOWN)) {
+      Serial.println("↓ Moving Backward");
+      digitalWrite(Move1,0);
+      digitalWrite(Move2,1);
+      digitalWrite(Move3,0);
+    }
+
+
+
+
+    if (ps2x.ButtonPressed(PSB_L1)){
+      digitalWrite(camera_up,1);
+      Serial.println("Camera Looking UP");
+      }
+    if (ps2x.ButtonReleased(PSB_L1)){
+      digitalWrite(camera_up,0);
+      }
+    if (ps2x.ButtonPressed(PSB_R1)){
+      digitalWrite(camera_down,1);
+      Serial.println("Camera Looking DOWN");
+      }
+    if (ps2x.ButtonReleased(PSB_R1)){
+      digitalWrite(camera_down,0);
+      }
+
+
+
+    if (ps2x.ButtonPressed(PSB_GREEN)){        //Δ                  ******************Color Patterning Key*********************
+      camera_state=!camera_state;
+      digitalWrite(camera_pin,camera_state);
+      if(camera_state==1)
+      Serial.println("Camera is ON");
+      else
+      Serial.println("Camera is OFF");
+      }
+      
+    if (ps2x.ButtonPressed(PSB_BLUE)){       //X           
+      Serial.println("STOPPED");
+      digitalWrite(Move1,0);
+      digitalWrite(Move2,0);
+      digitalWrite(Move3,0);    
+      }
+
+    if(ps2x.ButtonPressed(PSB_PINK)){        //□
+      light_state=!light_state;
+      digitalWrite(light_pin,light_state);
+      if(light_state==1){
+        Serial.println("Headlights are ON");
+        }
+        else{
+          Serial.println("Headlights are OFF");
+          }
+        }
+        
+    if (ps2x.Button(PSB_RED)){                //⚪     
+      Serial.print("Stick Values:");
+      Serial.print(ps2x.Analog(PSS_LY), DEC); 
+      Serial.print(",");
+      Serial.print(ps2x.Analog(PSS_LX), DEC);
+      Serial.print(",");
+      Serial.print(ps2x.Analog(PSS_RY), DEC);
+      Serial.print(",");
+      Serial.println(ps2x.Analog(PSS_RX), DEC);
+    }
+
+
+  
+  delay(50);
+}
