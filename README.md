@@ -5,4 +5,4 @@ Codes are run on three boards：RaspberryPi，Arduino，and Mbed.
 
 For more details,you can check "User_Manual.pdf".
 
-
+A demonstration video is uploaded to show the basic operations of this robot.
