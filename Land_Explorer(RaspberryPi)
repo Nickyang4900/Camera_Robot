@@ -1,0 +1,79 @@
+//This file is used to turn on/off the camera and headlights
+
+#include "opencv2/core/core.hpp"     
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include <opencv2/opencv.hpp>
+#include<iostream>
+#include<stdio.h>
+#include <wiringPi.h>  
+#include <sys/time.h>  
+#define Width 320
+#define Height 240
+using namespace cv;
+using namespace std;
+const int light_switch=1;
+const int camera_switch=29;
+
+void setup(){
+	if (wiringPiSetup() == -1) { //when initialize wiring failed,print messageto screen  
+		printf("setup wiringPi failed !");
+		}
+	pinMode(camera_switch, INPUT);
+	pinMode(light_switch,INPUT);
+
+	pinMode(21,OUTPUT);
+	pinMode(22,OUTPUT);	
+	pinMode(23,OUTPUT);	
+	pinMode(24,OUTPUT);	
+	pinMode(25,OUTPUT);	
+	pinMode(26,OUTPUT);	
+	pinMode(27,OUTPUT);
+	pinMode(28,OUTPUT);			
+	printf("\n(Press Δ to turn the camera on/off)");
+    }
+
+void Turn_light(){
+	int light_state=0;
+	
+	light_state=digitalRead(light_switch);   // ****Headlights***
+	
+	digitalWrite(21,light_state);
+	digitalWrite(22,light_state);
+	digitalWrite(23,light_state);
+	digitalWrite(24,light_state);
+	digitalWrite(25,light_state);
+	digitalWrite(26,light_state);
+	digitalWrite(27,light_state);
+	digitalWrite(28,light_state);
+	}
+
+int main() {
+	setup();
+	VideoCapture camera(0);
+	Mat src;
+    int light_state=0;
+	while(1){
+	    
+		if(digitalRead(camera_switch)==1){              //*****Camera*****
+		Turn_light();
+		destroyAllWindows();
+		}
+		
+	else{
+		printf("\n\n\n\n Camera is ON\n");
+
+		while(digitalRead(camera_switch)==0){
+			Turn_light();
+			camera >> src;
+			resize(src,src,Size(Width,Height),0,0);//shrink = higher efficiency 
+			namedWindow("src",0);
+			imshow("src",src);
+			moveWindow("src",320,240);
+			waitKey(30);
+			}
+		printf("\n\n\n\n Camera is OFF\n");
+		}
+	}
+	return 0;
+}
