@@ -1,0 +1,131 @@
+#include "mbed.h"       //This file is for Gamepad Controlling 
+
+DigitalIn MoveIn1(p9);  // Motor input,Move1 is the most significant digit
+DigitalIn MoveIn2(p8);
+DigitalIn MoveIn3(p7); 
+
+PwmOut Motor_1(p21);  //Motor Output
+PwmOut Motor_2(p22);
+PwmOut Motor_3(p23);
+PwmOut Motor_4(p24);
+DigitalOut ENpin(p28);
+  
+PwmOut steer(p25);    //Steer for camera
+InterruptIn UP(p5);
+InterruptIn DOWN(p6);
+float i=0.6;
+float step=0.02;
+int MOVE;
+
+void MovingF(){           //*****Control motor.Zero state added to avoid current overload
+    Motor_2=0;           
+    Motor_1=0;
+    Motor_3=0;
+    Motor_4=0;
+    
+    Motor_2=0.6;
+    Motor_1=0;
+    Motor_3=0.6;
+    Motor_4=0;   
+    }
+    
+void MovingTL(){
+    Motor_2=0;
+    Motor_1=0;
+    Motor_3=0;
+    Motor_4=0;
+    
+    Motor_2=0;
+    Motor_1=0.1;
+    Motor_3=0.6;
+    Motor_4=0; 
+    }
+    
+void MovingTR(){
+    Motor_2=0;
+    Motor_1=0;
+    Motor_3=0;
+    Motor_4=0;
+    
+    Motor_2=0.6;
+    Motor_1=0;
+    Motor_3=0;
+    Motor_4=0.1;    
+    }
+    
+void MovingB(){
+    Motor_2=0;
+    Motor_1=0;
+    Motor_3=0;
+    Motor_4=0;
+    
+    Motor_2=0;
+    Motor_1=0.4;
+    Motor_3=0;
+    Motor_4=0.4;    
+    }    
+    
+void MovingL(){
+    Motor_2=0;
+    Motor_1=0;
+    Motor_3=0;
+    Motor_4=0;
+    
+    Motor_2=0;
+    Motor_1=0.5;
+    Motor_3=0.7;
+    Motor_4=0;    
+    } 
+    
+void MovingR(){
+    Motor_2=0;
+    Motor_1=0;
+    Motor_3=0;
+    Motor_4=0;
+    
+    Motor_2=0.7;
+    Motor_1=0;
+    Motor_3=0;
+    Motor_4=0.5;    
+    }     
+    
+void MovingS(){ 
+    Motor_2=0;
+    Motor_1=0;
+    Motor_3=0;
+    Motor_4=0; 
+    }   
+     
+void up(){
+     i+=step;
+     if(i>1)
+     i=1;
+     }
+     
+void down(){
+     i-=step;
+     if(i<0.3)
+     i=0.3;
+     }
+     
+int main() {
+    steer.period_ms(2.5);
+    UP.rise(&up); 
+    DOWN.rise(&down); 
+    while(1){
+        steer=i;
+        MOVE=4*MoveIn1+2*MoveIn2+1*MoveIn3;
+        switch(MOVE){
+            case 0:MovingS();break;
+            case 1:MovingR();break;            
+            case 2:MovingB();break;            
+            case 3:MovingTR();break;
+            case 4:MovingL();break;
+            case 6:MovingTL();break;
+            case 7:MovingF();break;   
+            default:break;                
+            }
+            wait(0.05);
+        }  
+}
+
